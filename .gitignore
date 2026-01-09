@@ -1,0 +1,70 @@
+# ==========================================
+# Vivado Junk & Temporary Files
+# ==========================================
+# Log and Journal files (created every time Vivado opens)
+vivado.log
+vivado.jou
+vivado_*.backup.log
+vivado_*.backup.jou
+
+# Simulation outputs and directories
+xsim.dir/
+xsim.log
+xsim.jou
+xvlog.log
+xvlog.pb
+xelab.log
+xelab.pb
+xsim.pb
+*.vcd
+*.wdb
+
+# Synthesis, Implementation, and Hardware files
+.Xil/
+*.pb
+*.dcp
+*.cache
+*.hw
+*.runs
+*.sim
+*.ip_user_files
+*.gen
+*.str
+
+# ==========================================
+# Quartus Junk & Temporary Files
+# ==========================================
+# Database and incremental compilation folders
+db/
+incremental_db/
+greybox_tmp/
+hc_output/
+
+# Compilation output (Bitstreams, Reports, etc.)
+output_files/
+simulation/
+*.rpt
+*.summary
+*.jdi
+*.pin
+*.done
+*.qws
+*.bak
+*.smsg
+*.txt
+
+# ==========================================
+# OS & General System Files
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+*.swp
+*.tmp
+
+# ==========================================
+# MIPS Project Specific
+# ==========================================
+# Ignore temporary memory hex files if they are auto-generated
+# *.hex
