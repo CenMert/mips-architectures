@@ -1,28 +1,30 @@
 # 00 - Single-Cycle MIPS Processor
 
-This directory contains the RTL implementation of a Single-Cycle MIPS processor. In this architecture, every instruction is executed within a single clock cycle, resulting in a theoretical Cycles Per Instruction (CPI) of 1.
+This repository contains a 32 bit MIPS Single Cycle Processor, developed as part of the CSE331 class at the Gebze Technical University.
+The project aims a clear understanding of computer architecture and digital logic design.
 
-## Architectural Features
+## Features
 
-* **Fixed CPI:** Each instruction, regardless of its complexity, completes in one clock period.
-* **Behavioral Control:** Control unit designed as behavioral. It needs to be changed to combintational!
-* **Instruction Set Support:** Supports a subset of the MIPS32 ISA, including:
-    * **R-Type:** add, sub, and, or, xor, slt
-    * **I-Type:** lw, sw, beq, addi
-    * **J-Type:** j
+* 32-bit ISA (instruction set architecture)
+* R-type, I-type and J-type instruction implementation.
+* Register File with 32 registers.
+* Control Unit.
+* Data Memory block to execute the memory operations (LW, SW).
 
-## Component Overview
+## Architecture
 
-The processor is built using a modular approach, consisting of the following key units:
+Basicaly it follows 5 stages which are named as:
 
-* **Arithmetic Logic Unit (ALU):** Performs arithmetic and logical operations.
-* **Register File:** A 32x32-bit register bank providing dual-read and single-write ports.
-* **Control Unit:** Decodes the opcode and funct fields to manage the datapath.
-* **Datapath:** The interconnection of all functional units including Program Counter (PC), Instruction Memory, and Data Memory.
-* **Modules (Building Blocks):** Common sub-modules such as multiplexers, sign-extenders, and adders.
+- IF Instruction Fetch: Fecth the instruction from instruction memory.
+- ID Instruction Decode: Decoding the instructions which comes from instr. mem.
+- EX Execution: Runs the desired ALU operations.
+- MEM Memory: Memory stage to save the data to memory file.
+- WB Write Back: Writing back the data to the desired registers.
 
-## Performance Characteristics
+## Implementation
 
-* **Cycle Time:** Limited by the longest path in the design (typically the `lw` instruction path).
-* **Hardware Utilization:** Redundant hardware (e.g., separate instruction and data memories) is used to avoid structural hazards within a single cycle.
+Various verilog files are created and sorted by their jobs. 
 
+* Atomic designs such as multiplexers, half adder or full adder keep under 'modules' folder.
+
+Same strategy is followed for better understanding.
