@@ -25,6 +25,6 @@ Basicaly it follows 5 stages which are named as:
 
 Various verilog files are created and sorted by their jobs. 
 
-* Atomic designs such as multiplexers, half adder or full adder keep under 'modules' folder.
+* Atomic designs such as mux's, half adder or full adder keep under 'modules' folder.
 
 Same strategy is followed for better understanding.
