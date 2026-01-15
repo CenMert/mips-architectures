@@ -2,7 +2,7 @@
 // Project: MIPS Single Cycle Processor
 // Description: Data Memory module for MIPS Single Cycle Processor.
 // Author: Cengiz Mert ÖNCE
-// Date: 2026-01-09
+// Date: 2026-01-14
 
 module data_memory (
     input wire clk,              // Clock signal (Critical for writing)

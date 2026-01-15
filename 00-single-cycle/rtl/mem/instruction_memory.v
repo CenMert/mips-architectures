@@ -1,9 +1,11 @@
-
 // Module Name: Instruction Memory.v
 // Project: MIPS Single Cycle Processor
 // Description: Instruction Memory module that takes external instructions files to check the data path is working correctly.
 // Author: Cengiz Mert ÖNCE
 // Date: 2026-01-15
+
+// ! You may change here to offset the instructions if needed.
+// ! you may change the way of addressing as well.
 
 module instruction_memory (
     input wire [31:0] addr,          // Address input (from PC)

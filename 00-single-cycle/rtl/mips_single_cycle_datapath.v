@@ -41,6 +41,50 @@ wire MemWrite;    // Memory write control signal
 wire ALUSrc;       // Selects between register data and immediate for ALU input
 wire RegWrite;     // Register write control signal
 
+// ----------------
+// next pc calculation wires
+wire [31:0] pc_plus_4;      // PC + 4 value
+wire [31:0] branch_target;   // Branch target address
+wire [31:0] next_pc;
+
+// we may use for debugging, idk
+wire cout_of_next_pc;        // cout of PC value
+wire cout_of_branch_target;  // cout of branch target adder
+
+adder_32bit pc_plus_4_adder (
+    .a(current_pc),             // Current PC
+    .b(32'd4),                  // Increment by 4
+    .sum(pc_plus_4),            // PC + 4 -> next instruction / next_pc
+    .carry_out(cout_of_next_pc)
+);
+
+adder_32bit_next_pc_and_branch_target branch_adder (
+    .a(pc_plus_4),                      // PC + 4
+    .b(pre_branch),                     // Sign-extended immediate shifted left by 2
+    .sum(branch_target),                // Branch target address
+    .carry_out(cout_of_branch_target)
+);
+
+shift_left_two SL2 (
+    .in_data(extended_immediate), // Sign-extended immediate
+    .out_data(pre_branch)        // Shifted left by 2
+
+    // pre_branch goes into branch_adder
+);
+
+// ----------------
+// IF STAGE Modules
+// Includes Program Counter and Instruction Memory
+// ---
+program_counter
+
+// ---
+// End of IF STAGE Modules
+// ----------------
+
+
+
+
 // Control Unit instance
 control_unit CU (
     .opcode(opcode),
