@@ -8,10 +8,12 @@ module mips_single_cycle_datapath
 (
     input wire clk,
     input wire reset,
-    input wire [31:0] instruction, // Instruction provided as input
+
     output wire [31:0] alu_result, // ALU output
     output wire [31:0] write_data  // Data written to register
 );
+
+wire [31:0] instruction; // Current instruction from instruction memory
 
 wire [5:0] opcode;      // instruction[31:26]
 wire [4:0] rs;          // instruction[25:21]
@@ -43,6 +45,7 @@ wire RegWrite;     // Register write control signal
 
 // ----------------
 // next pc calculation wires
+wire [31:0] current_pc;      // Current PC value
 wire [31:0] pc_plus_4;      // PC + 4 value
 wire [31:0] branch_target;   // Branch target address
 wire [31:0] next_pc;
@@ -54,6 +57,7 @@ wire cout_of_branch_target;  // cout of branch target adder
 adder_32bit pc_plus_4_adder (
     .a(current_pc),             // Current PC
     .b(32'd4),                  // Increment by 4
+
     .sum(pc_plus_4),            // PC + 4 -> next instruction / next_pc
     .carry_out(cout_of_next_pc)
 );
@@ -61,54 +65,70 @@ adder_32bit pc_plus_4_adder (
 adder_32bit_next_pc_and_branch_target branch_adder (
     .a(pc_plus_4),                      // PC + 4
     .b(pre_branch),                     // Sign-extended immediate shifted left by 2
+
     .sum(branch_target),                // Branch target address
     .carry_out(cout_of_branch_target)
 );
 
 shift_left_two SL2 (
     .in_data(extended_immediate), // Sign-extended immediate
+
     .out_data(pre_branch)        // Shifted left by 2
 
     // pre_branch goes into branch_adder
 );
 
+para_mux2to1 #(.DATA_WIDTH(32)) pc_source_mux (
+    .inputA(pc_plus_4),            // Next sequential instruction
+    .inputB(branch_target),        // Branch target address
+    .select(Branch & alu_zero),    // Branch taken condition
+
+    .outputY(next_pc)
+    
+    // so the next_pc is the final value of the pc that controlled and chosen by the control unit.
+);
+
 // ----------------
-// IF STAGE Modules
+// * IF STAGE Modules
 // Includes Program Counter and Instruction Memory
 // ---
-program_counter
+
+program_counter PC (
+    .clk(clk),
+    .reset(reset),
+    .next_pc(next_pc),
+
+    .pc(current_pc)
+);
+
+instruction_memory IM (
+    .addr(current_pc),
+
+    .instruction(instruction)
+);
 
 // ---
-// End of IF STAGE Modules
+// * End of IF STAGE Modules
 // ----------------
 
+// ----------------
+// * ID STAGE Modules
+// Includes Register File, Sign Extender, Control Unit
+// ---
 
-
-
-// Control Unit instance
 control_unit CU (
     .opcode(opcode),
-    .reg_dst(RegDst),
-    .alu_src(ALUSrc),
-    .reg_write(RegWrite),
-    .alu_op(ALUOp)
-);
-// ----------------
 
-// Register File wires
-wire [31:0] read_data1; // Data from register rs
-wire [31:0] read_data2; // Data from register rt
-wire [4:0] write_register; // Data from rs or rt based on instruction type 
-
-mux2to1_5bit rt_rd_write_reg_mux (
-    .in0(rt),          // I-type instruction uses rt
-    .in1(rd),          // R-type instruction uses rd
-    .sel(RegDst),      // Control signal to select between rt and rd
-    .y(write_register)  // Output write register
+    .RegDst(RegDst),
+    .Branch(Branch),
+    .MemRead(MemRead),
+    .MemtoReg(MemtoReg),
+    .ALUOp(ALUOp),
+    .MemWrite(MemWrite),
+    .ALUSrc(ALUSrc),
+    .RegWrite(RegWrite)
 );
 
-
-// register file instance
 register_file RF (
     .clk(clk),
     .reset(reset),
@@ -122,6 +142,18 @@ register_file RF (
     .read_data2(read_data2)
 );
 
+// Register File wires
+wire [31:0] read_data1; // Data from register rs
+wire [31:0] read_data2; // Data from register rt
+wire [4:0] write_register; // Data from rs or rt based on instruction type 
+
+mux2to1_5bit rt_rd_write_reg_mux (
+    .in0(rt),          // I-type instruction uses rt
+    .in1(rd),          // R-type instruction uses rd
+    .sel(RegDst),      // Control signal to select between rt and rd
+    .y(write_register)  // Output write register
+);
+
 // Sign Extender instance
 // ALU input 2 selection
 wire [31:0] extended_immediate;
@@ -130,6 +162,17 @@ sign_extender SE (
     .immediate_in(immediate),
     .immediate_out(extended_immediate)
 );
+
+// ---
+// * End of ID STAGE Modules
+// ----------------
+
+// ----------------
+// * EX STAGE Modules
+// Includes ALU and ALU Control
+// ---
+
+
 
 wire [31:0] alu_input2;
 para_mux2to1 #(.DATA_WIDTH(32)) ALU_second_src_mux (
@@ -157,6 +200,44 @@ alu ALU (
     .zero(alu_zero)                 // Zero flag (not used here)
 );
 
-// assign write_data = alu_result; // if we wanna write alu result to register
+// ---
+// * End of EX STAGE Modules
+// ----------------
+
+// ----------------
+// * MEM STAGE Modules
+// Includes Data Memory
+// ---
+
+data_memory DM (
+    .clk(clk),
+    .addr(alu_result),           // Address from ALU
+    .write_data(read_data2),     // Data to be written (from register rt)
+    .memWrite(MemWrite),        // Memory write control signal
+    .memRead(MemRead),          // Memory read control signal
+
+    .read_data(memory_read_data) // Data read from memory
+);
+
+// Data Memory wires
+wire [31:0] memory_read_data; // Data read from Data Memory
+// ---
+// * End of MEM STAGE Modules
+
+// ----------------
+// * WB STAGE Modules
+// Includes Write-Back Mux
+// ---
+
+para_mux2to1 #(.DATA_WIDTH(32)) write_back_mux (
+    .inputA(alu_result),            // ALU result
+    .inputB(memory_read_data),      // Data from memory, which is actually Memory[address], address = ALU result
+    .select(MemtoReg),              // Control signal to select write-back data
+    .outputY(write_data)            // Data to be written back to register
+);
+
+// ---
+// * End of WB STAGE Modules
+// ----------------
 
 endmodule
